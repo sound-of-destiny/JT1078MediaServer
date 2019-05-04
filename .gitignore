@@ -1,0 +1,14 @@
+# IDE
+.idea/
+
+# gradle
+.gradle/
+gradle/
+
+# else
+build/
+logs/
+out/
+audio.g726
+audio2.g726
+video.h264
