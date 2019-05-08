@@ -4,7 +4,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import protocol.RTPMessage;
-import util.BCD8421Operater;
+import util.BCD8421Operator;
 
 import java.util.List;
 
@@ -35,7 +35,7 @@ public class RTPMessageDecoder extends ByteToMessageDecoder {
         msg.setPackageFlowId(in.readShort());
         byte[] simNum = new byte[6];
         in.readBytes(simNum);
-        msg.setSIM(BCD8421Operater.bcd2String(simNum));
+        msg.setSIM(BCD8421Operator.bcd2String(simNum));
 
         msg.setLogicChannel(in.readByte());
 

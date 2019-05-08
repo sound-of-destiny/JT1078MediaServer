@@ -14,11 +14,11 @@ import static org.bytedeco.ffmpeg.global.avutil.AV_PIX_FMT_YUV420P;
 import static org.bytedeco.ffmpeg.global.avutil.AV_SAMPLE_FMT_S16;
 
 @Slf4j
-public class PushTask extends Thread {
+public class MediaPushTask extends Thread {
 
-    private volatile boolean stop = false;
+    public volatile boolean stop = false;
 
-    private String name;
+    public String name;
 
     private FFmpegFrameGrabber grabber;
     private FFmpegFrameGrabber audioGrabber;
@@ -32,7 +32,7 @@ public class PushTask extends Thread {
     private ByteArrayOutputStream bos = new ByteArrayOutputStream();
     private ByteArrayOutputStream abos = new ByteArrayOutputStream();
 
-    public PushTask(String name) throws IOException {
+    public MediaPushTask(String name) throws IOException {
         this.name = name;
         pos = new PipedOutputStream();
         pis = new PipedInputStream(65536);
@@ -47,19 +47,20 @@ public class PushTask extends Thread {
     public void run() {
 
         try {
-            //grabber = new FFmpegFrameGrabber(pis);
-            //grabber.start();
+            grabber = new FFmpegFrameGrabber(pis);
+            grabber.start();
 
             audioGrabber = new FFmpegFrameGrabber(apis);
-            //audioGrabber.setFormat("flv");
-            audioGrabber.setSampleRate(8000);
+            audioGrabber.setFormat("s16le");
+            audioGrabber.setSampleRate(16000);
             audioGrabber.setSampleFormat(AV_SAMPLE_FMT_S16);
             audioGrabber.setSampleMode(FrameGrabber.SampleMode.SHORT);
             //audioGrabber.setAudioBitrate(128000);
             audioGrabber.setAudioChannels(1);
-            audioGrabber.setAudioCodec(avcodec.AV_CODEC_ID_ADPCM_G726LE);
+            audioGrabber.setAudioCodec(avcodec.AV_CODEC_ID_PCM_S16LE);
+            log.info("hello");
             audioGrabber.start();
-
+            log.info("hello l");
             log.info("getImageHeight {}", grabber.getImageHeight());
             log.info("getImageWidth {}", grabber.getImageWidth());
             log.info("getFormat {}", grabber.getFormat());
@@ -89,10 +90,11 @@ public class PushTask extends Thread {
             recorder.setAudioCodec(avcodec.AV_CODEC_ID_AAC);  // 0x15000 + 2
             //recorder.setAudioCodec(avcodec.AV_CODEC_ID_ADPCM_G726);
             recorder.setFormat("flv"); // rtmp
+            //recorder.setFormat("flac"); // rtmp
             recorder.setFrameRate(25); // 设低码率不卡本来25
-            //recorder.setPixelFormat(0);
+            recorder.setPixelFormat(0);
             recorder.setPixelFormat(AV_PIX_FMT_YUV420P);
-            //recorder.setSampleFormat(AV_SAMPLE_FMT_S16);
+            recorder.setSampleFormat(AV_SAMPLE_FMT_S16);
 
             recorder.start();
 
@@ -113,21 +115,20 @@ public class PushTask extends Thread {
 
             while (!stop && !this.isInterrupted()) {
 
-                //Frame aframe = agrabber.grab();
-                //recorder.recordSamples(aframe.samples);
-
-
-                //Frame frame = grabber.grab();
+                Frame frame = grabber.grab();
                 Frame aframe = audioGrabber.grabSamples();
 
-                /*if(frame != null) {
+                if(frame != null) {
                     recorder.record(frame);
                     canvasFrame.showImage(frame); // 主码流不卡, 子码流卡
-                } */
+                }
+                log.info("some thing");
                 if(aframe != null) {
                     log.info("音频");
                     recorder.recordSamples(aframe.samples);
                 }
+
+                sleep(20);
 
                 /*if (keyFrame.keyFrame) {
                     canvasFrame.showImage(keyFrame);
@@ -177,16 +178,17 @@ public class PushTask extends Thread {
         audioGrabber.stop();
         recorder.stop();
         recorder.release();
+        interrupt();
     }
 
-    public void flusha() throws IOException {
+    public void flushAudio() throws IOException {
         abos.flush();
         apos.write(abos.toByteArray());
         apos.flush();
         abos.reset();
     }
 
-    public void writea(byte[] dataBody) throws IOException {
+    public void writeAudio(byte[] dataBody) throws IOException {
         abos.write(dataBody);
     }
 }

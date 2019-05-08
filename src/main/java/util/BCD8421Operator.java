@@ -1,6 +1,6 @@
 package util;
 
-public final class BCD8421Operater {
+public final class BCD8421Operator {
 
 	/**
 	 * BCD字节数组===>String

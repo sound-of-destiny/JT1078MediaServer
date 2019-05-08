@@ -3,27 +3,11 @@ package service.handler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;
-import org.bytedeco.ffmpeg.avcodec.AVCodec;
-import org.bytedeco.ffmpeg.avcodec.AVCodecContext;
-import org.bytedeco.ffmpeg.avcodec.AVCodecParserContext;
-import org.bytedeco.ffmpeg.avcodec.AVPacket;
-import org.bytedeco.ffmpeg.avutil.AVDictionary;
-import org.bytedeco.ffmpeg.avutil.AVFrame;
-import org.bytedeco.ffmpeg.avutil.AVOption;
-import org.bytedeco.ffmpeg.global.avcodec;
 import protocol.RTPMessage;
-import push.PushManager;
-import push.PushTask;
+import push.MediaPushManager;
+import push.MediaPushTask;
 
-import java.io.FileOutputStream;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.ShortBuffer;
-import java.nio.channels.FileChannel;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 @Slf4j
 public class RTPPackageHandler extends SimpleChannelInboundHandler<RTPMessage> {
@@ -31,11 +15,12 @@ public class RTPPackageHandler extends SimpleChannelInboundHandler<RTPMessage> {
     protected void channelRead0(ChannelHandlerContext ctx, RTPMessage msg) throws Exception {
         /*log.info(msg.toString());
         log.info(Instant.ofEpochMilli(msg.getTimeStamp()).toString());*/
-        PushTask task = PushManager.get(ctx.channel().id().asLongText());
+        MediaPushManager mediaPushManager = MediaPushManager.getInstance();
+        MediaPushTask task = mediaPushManager.getTask(ctx.channel().id().asLongText());
         String taskName = msg.getSIM() + "_" + msg.getLogicChannel();
         if (msg.getDataType() != 3 && msg.getDataType() != 4) {
             if (task == null) {
-                task = PushManager.newPublishTask(ctx.channel().id().asLongText(), taskName);
+                task = mediaPushManager.newPublishTask(ctx, taskName);
                 task.start();
             }
             task.write(msg.getDataBody());
@@ -49,8 +34,8 @@ public class RTPPackageHandler extends SimpleChannelInboundHandler<RTPMessage> {
             log.info("audio timestamp : {}", Instant.ofEpochMilli(msg.getTimeStamp()).toString());
             log.info("audio data_length : {}", msg.getDataBodyLength());
             log.info("audio PackageFlag : {}", msg.getPackageFlag());
-            task.writea(msg.getDataBody());
-            task.flusha();
+            task.writeAudio(msg.getDataBody());
+            task.flushAudio();
 
             /*short[] samples = new short[40];
             ByteBuffer.wrap(msg.getDataBody()).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(samples);

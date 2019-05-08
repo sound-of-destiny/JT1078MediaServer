@@ -7,7 +7,8 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
-import service.codec.WebSocketFrameHandler;
+import service.handler.WebSocketBinaryFrameHandler;
+import service.handler.WebSocketTextFrameHandler;
 
 public class JT1078ServerWebInitializer extends ChannelInitializer {
     @Override
@@ -18,6 +19,7 @@ public class JT1078ServerWebInitializer extends ChannelInitializer {
         pipeline.addLast(new ChunkedWriteHandler());
         pipeline.addLast(new HttpObjectAggregator(8192));
         pipeline.addLast(new WebSocketServerProtocolHandler("/hello"));
-        pipeline.addLast(new WebSocketFrameHandler());
+        pipeline.addLast(new WebSocketBinaryFrameHandler());
+        pipeline.addLast(new WebSocketTextFrameHandler());
     }
 }
