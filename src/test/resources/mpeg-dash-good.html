@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link href="video-js.css" rel="stylesheet">
+</head>
+<body>
+<video id=example-video width=600 height=300 class="video-js vjs-default-skin" controls> </video>
+
+<script src="video.js"></script>
+<script src="dash.all.min.js"></script>
+<script src="videojs-dash.min.js"></script>
+<script>
+    var player = videojs('example-video');
+    player.src({ src: 'http://202.194.14.72:8080/dash/test.mpd', type: 'application/dash+xml'});
+    player.play();
+</script>
+</body>
+</html>

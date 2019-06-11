@@ -1,10 +1,8 @@
 package push;
 
-import io.netty.buffer.Unpooled;
-import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import lombok.extern.slf4j.Slf4j;
+import org.bytedeco.ffmpeg.global.avcodec;
 import org.bytedeco.javacv.*;
-import server.BusinessManager;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -12,12 +10,13 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 
 import static org.bytedeco.ffmpeg.global.avcodec.AV_CODEC_ID_ADPCM_G726LE;
-import static org.bytedeco.ffmpeg.global.avcodec.AV_CODEC_ID_PCM_S16LE;
+import static org.bytedeco.ffmpeg.global.avutil.AV_PIX_FMT_YUV420P;
+import static org.bytedeco.ffmpeg.global.avutil.AV_SAMPLE_FMT_S16;
 
 @Slf4j
-public class TalkBackPushTask extends Thread {
+public class AudioPushTask extends Thread {
 
-    private volatile boolean stop = false;
+    public volatile boolean stop = false;
 
     private FFmpegFrameGrabber audioGrabber;
     private FFmpegFrameRecorder recorder;
@@ -27,7 +26,8 @@ public class TalkBackPushTask extends Thread {
 
     private ByteArrayOutputStream abos = new ByteArrayOutputStream();
 
-    TalkBackPushTask() throws IOException {
+    public AudioPushTask(FFmpegFrameRecorder recorder) throws IOException {
+        this.recorder = recorder;
 
         apos = new PipedOutputStream();
         apis = new PipedInputStream(65536);
@@ -36,52 +36,46 @@ public class TalkBackPushTask extends Thread {
 
     @Override
     public void run() {
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
+        //ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
+
             audioGrabber = new FFmpegFrameGrabber(apis);
             audioGrabber.setFormat("g726le");
-            audioGrabber.setSampleRate(8000);     // formal
-            //audioGrabber.setSampleFormat(AV_SAMPLE_FMT_S16);
+            audioGrabber.setSampleRate(8000);
+            audioGrabber.setSampleFormat(AV_SAMPLE_FMT_S16);
             audioGrabber.setSampleMode(FrameGrabber.SampleMode.SHORT);
-            audioGrabber.setAudioBitrate(32000);
+            // audioGrabber.setAudioBitrate(40000);
             audioGrabber.setAudioChannels(1);
-            audioGrabber.setAudioCodec(AV_CODEC_ID_ADPCM_G726LE);
+            // audioGrabber.setAudioCodec(AV_CODEC_ID_ADPCM_G726LE);
             audioGrabber.start();
 
-            recorder = new FFmpegFrameRecorder(baos, 1);
-            recorder.setAudioCodec(AV_CODEC_ID_PCM_S16LE);  // 0x15000 + 2
-            recorder.setFormat("s16le");
+            recorder.setAudioCodec(avcodec.AV_CODEC_ID_AAC);  // 0x15000 + 2
+            // recorder.setAudioCodec(avcodec.AV_CODEC_ID_ADPCM_G726);
+            // recorder.setFormat("flv"); // rtmp
+            // recorder.setFormat("flac"); // rtmp
+            // recorder.setSampleFormat(AV_SAMPLE_FMT_S16);
+
             recorder.start();
 
-            while (!stop && !isInterrupted()) {
-
-                Frame audioFrame = audioGrabber.grabSamples();
-
-                if(audioFrame != null) {
-                    recorder.recordSamples(audioFrame.samples);
-                    baos.flush();
-                    byte[] data = baos.toByteArray();
-                    log.info("data {}", data);
-                    log.info("data size {}", data.length);
-                    // 发送到 web
-                    BusinessManager.getInstance().get("15153139702").channel().writeAndFlush(
-                            new BinaryWebSocketFrame(Unpooled.copiedBuffer(data)));
-                    baos.reset();
+            while (!stop && !this.isInterrupted()) {
+                Frame aframe = audioGrabber.grabSamples();
+                if(aframe != null) {
+                    log.info("voice");
+                    recorder.recordSamples(8000, 1, aframe.samples);
                 }
+                // Thread.sleep(20);
             }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
-        log.info("close talkBack out");
+
     }
 
     public void shutdown() throws FrameGrabber.Exception, FrameRecorder.Exception {
         audioGrabber.stop();
         recorder.stop();
         recorder.release();
-        stop = true;
         interrupt();
     }
 

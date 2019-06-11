@@ -1,5 +1,8 @@
 package util;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class ByteOperator {
 
     public static byte[] byteToBytes(byte val) {
@@ -10,25 +13,25 @@ public class ByteOperator {
 
     public static byte[] intTo4Byte(int val) {
         byte[] res = new byte[4];
-        res[0] = (byte) (val & 0xff);
-        res[1] = (byte) ((val >> 8) & 0xff);
-        res[2] = (byte) ((val >> 16) & 0xff);
-        res[3] = (byte) ((val >> 24) & 0xff);
+        res[0] = (byte) ((val >>> 24) & 0xFF);
+        res[1] = (byte) ((val >>> 16) & 0xFF);
+        res[2] = (byte) ((val >>> 8) & 0xFF);
+        res[3] = (byte) (val & 0xFF);
         return res;
     }
 
     public static byte[] intTo3Byte(int val) {
         byte[] res = new byte[3];
-        res[0] = (byte) (val & 0xff);
-        res[1] = (byte) ((val >> 8) & 0xff);
-        res[2] = (byte) ((val >> 16) & 0xff);
+        res[0] = (byte) ((val >>> 16) & 0xFF);
+        res[1] = (byte) ((val >>> 8) & 0xFF);
+        res[2] = (byte) (val & 0xFF);
         return res;
     }
 
     public static byte[] intTo2Byte(int val) {
         byte[] res = new byte[2];
-        res[0] = (byte) (val & 0xff);
-        res[1] = (byte) ((val >> 8) & 0xff);
+        res[0] = (byte) ((val >> 8) & 0xff);
+        res[1] = (byte) (val & 0xff);
         return res;
     }
 
@@ -40,8 +43,8 @@ public class ByteOperator {
 
     public static byte[] shortToBytes(int val) {
         byte[] res = new byte[2];
-        res[0] = (byte) (val & 0xff);
-        res[1] = (byte) ((val >> 8) & 0xff);
+        res[0] = (byte) ((val >> 8) & 0xff);
+        res[1] = (byte) (val & 0xff);
         return res;
     }
 
@@ -57,22 +60,51 @@ public class ByteOperator {
         return (b[0] & 0xff) | ((b[1] & 0xff) << 8) | ((b[2] & 0xff) << 16) | ((b[3] & 0xff) << 24);
     }
 
-    public static byte[] concatAll(byte[]... bList) {
-        int totalLength = 0;
-        for(byte[] b : bList) {
-            if (b != null) {
-                totalLength += b.length;
+    public static byte[] concatAll(byte[] first, byte[]... rest) {
+        int totalLength = first.length;
+        for (byte[] array : rest) {
+            if (array != null) {
+                totalLength += array.length;
             }
         }
-        byte[] res = new byte[totalLength];
-        int offset = 0;
-        for(byte[] b : bList) {
+        byte[] result = Arrays.copyOf(first, totalLength);
+        int offset = first.length;
+        for(byte[] b : rest) {
             if (b != null) {
-                System.arraycopy(b,0, res, offset, b.length);
+                System.arraycopy(b,0, result, offset, b.length);
                 offset += b.length;
             }
         }
-        return res;
+        return result;
+    }
+
+    public static int getCheckSum4JT808(byte[] bs, int start, int end) {
+        if (start < 0 || end > bs.length)
+            throw new ArrayIndexOutOfBoundsException("getCheckSum4JT808 error : index out of bounds(start=" + start
+                    + ",end=" + end + ",bytes length=" + bs.length + ")");
+        int cs = 0;
+        for (int i = start; i < end; i++) {
+            cs ^= bs[i];
+        }
+        return cs;
+    }
+
+    public static byte[] concatAll(List<byte[]> rest) {
+        int totalLength = 0;
+        for (byte[] array : rest) {
+            if (array != null) {
+                totalLength += array.length;
+            }
+        }
+        byte[] result = new byte[totalLength];
+        int offset = 0;
+        for (byte[] array : rest) {
+            if (array != null) {
+                System.arraycopy(array, 0, result, offset, array.length);
+                offset += array.length;
+            }
+        }
+        return result;
     }
 
     public static String byteToBitString(byte[] bList) {

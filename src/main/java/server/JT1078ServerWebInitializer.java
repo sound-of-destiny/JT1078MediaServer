@@ -17,7 +17,7 @@ public class JT1078ServerWebInitializer extends ChannelInitializer {
 
         pipeline.addLast(new HttpServerCodec());
         pipeline.addLast(new ChunkedWriteHandler());
-        pipeline.addLast(new HttpObjectAggregator(8192));
+        pipeline.addLast(new HttpObjectAggregator(2621440));
         pipeline.addLast(new WebSocketServerProtocolHandler("/hello"));
         pipeline.addLast(new WebSocketBinaryFrameHandler());
         pipeline.addLast(new WebSocketTextFrameHandler());

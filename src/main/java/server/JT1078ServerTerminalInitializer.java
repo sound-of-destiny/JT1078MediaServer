@@ -14,7 +14,7 @@ public class JT1078ServerTerminalInitializer extends ChannelInitializer {
     protected void initChannel(Channel ch) throws Exception {
         ChannelPipeline pipeline = ch.pipeline();
 
-        pipeline.addLast(new DelimiterBasedFrameDecoder(1530, Unpooled.copiedBuffer(JT1078Const.pkg_delimiter)));
+        pipeline.addLast(new DelimiterBasedFrameDecoder(2621440, Unpooled.copiedBuffer(JT1078Const.pkg_delimiter)));
         pipeline.addLast(new RTPMessageDecoder());
         pipeline.addLast(new RTPPackageHandler());
     }

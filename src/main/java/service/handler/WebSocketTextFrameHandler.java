@@ -7,6 +7,7 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import lombok.extern.slf4j.Slf4j;
 import push.TalkBackPushManager;
 import push.TalkBackPushTask;
+import server.BusinessManager;
 
 @Slf4j
 public class WebSocketTextFrameHandler extends SimpleChannelInboundHandler<TextWebSocketFrame> {
@@ -15,13 +16,14 @@ public class WebSocketTextFrameHandler extends SimpleChannelInboundHandler<TextW
         log.info("text : {}", msg.text());
         log.info("readableBytes : {}", msg.content().readableBytes());
 
+        BusinessManager.getInstance().put("15153139702", ctx);
         String ctxId = ctx.channel().id().asLongText();
 
         TalkBackPushManager talkBackPushManager = TalkBackPushManager.getInstance();
         TalkBackPushTask task = talkBackPushManager.get(ctxId);
         if (msg.text().equals("start")) {
             if (task == null) {
-                task = talkBackPushManager.newPublishTask(ctx.channel().id().asLongText());
+                task = talkBackPushManager.newPublishTask(ctxId);
                 if (task != null) {
                     task.start();
                 }
@@ -38,13 +40,12 @@ public class WebSocketTextFrameHandler extends SimpleChannelInboundHandler<TextW
     }
 
     @Override
-    public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
-        Channel channel = ctx.channel();
-        log.info("【有对讲web接入】   " + channel);
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        log.info("【有对讲web接入】   " + ctx.channel());
     }
 
     @Override
-    public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         log.info("【有对讲web断开】");
     }
 

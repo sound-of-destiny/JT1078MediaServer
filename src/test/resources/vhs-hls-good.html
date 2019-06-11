@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link href="video-js.css" rel="stylesheet">
+</head>
+<body>
+<video-js id=example-video width=960 height=540 class="vjs-default-skin" controls>
+    <source
+            src="http://202.194.14.72:8080/hls/15153139702_1.m3u8"
+            type="application/x-mpegURL">
+</video-js>
+<script src="video.js"></script>
+<script src="videojs-http-streaming.min.js"></script>
+<script>
+    var player = videojs('example-video');
+    player.play();
+</script>
+</body>
+</html>

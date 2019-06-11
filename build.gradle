@@ -34,6 +34,6 @@ jar {
         configurations.runtime.collect{zipTree(it)}
     }
     manifest {
-        attributes 'Main-Class': 'cn.edu.sdu.JT1078MediaServer.server.JT1078MediaServer'
+        attributes 'Main-Class': 'server.JT1078MediaServer'
     }
 }
